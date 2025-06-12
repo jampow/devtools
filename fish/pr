@@ -35,5 +35,8 @@ az repos pr create --draft --title "#$taskNumber $title" -t $mainBranch -r $repo
 
 set repoUrl (cat $prLogTempFile | jq .repository.remoteUrl)
 set prId (cat $prLogTempFile | jq .codeReviewId)
+set prUrl $repoUrl/pullrequest/$prId
 
-echo $repoUrl/pullrequest/$prId
+echo $prUrl
+
+google-chrome-stable $prUrl
