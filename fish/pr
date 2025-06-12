@@ -6,6 +6,7 @@ set repoName (basename (cat $gitTopLevel/.git/config | grep "url = " | grep -o "
 set templateFile (echo $gitTopLevel/.azuredevops/pull_request_template.md);
 set descTempFile /tmp/description.md;
 set lastDescTempFile /tmp/lastDescription.md;
+set prLogTempFile /tmp/pr.log
 set taskNumber (echo (__git.current_branch) | grep -e "[0-9]\+" -o);
 
 echo "Qual o título do seu PR? Vamos adicionar o número da task ($taskNumber) ao início dele"
@@ -30,5 +31,9 @@ while read -l line
 end < $descTempFile
 
 
-az repos pr create --draft --title "#$taskNumber $title" -t $mainBranch -r $repoName -d $description > pr.log
+az repos pr create --draft --title "#$taskNumber $title" -t $mainBranch -r $repoName -d $description > $prLogTempFile
 
+set repoUrl (cat $prLogTempFile | jq .repository.remoteUrl)
+set prId (cat $prLogTempFile | jq .codeReviewId)
+
+echo $repoUrl/pullrequest/$prId
