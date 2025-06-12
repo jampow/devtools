@@ -8,6 +8,13 @@ Estes scripts precisam da cli da azure. Siga as [instruções no site oficial](h
 
 Após a instalação é necessário instalar o plugin do devops. Instruções de como fazer podem ser encontradas no [repo da extensão](https://github.com/Azure/azure-devops-cli-extension).
 
+Por último precisamos adicionar configurações padrões ao plugin do devops
+
+```
+az devops configure --defaults project=NomeDoProjeto
+az devops configure --defaults organization=https://dev.azure.com/SuaOrganizacao
+```
+
 ## Roadmap
 
 Ter uma cli para agilizar alguns fluxos de trabalho como
