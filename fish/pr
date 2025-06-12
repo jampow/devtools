@@ -1,0 +1,34 @@
+#!/bin/fish
+
+set gitTopLevel (git rev-parse --show-toplevel);
+set mainBranch (__git.default_branch);
+set repoName (basename (cat $gitTopLevel/.git/config | grep "url = " | grep -o "\/.\+"));
+set templateFile (echo $gitTopLevel/.azuredevops/pull_request_template.md);
+set descTempFile /tmp/description.md;
+set lastDescTempFile /tmp/lastDescription.md;
+set taskNumber (echo (__git.current_branch) | grep -e "[0-9]\+" -o);
+
+echo "Qual o título do seu PR? Vamos adicionar o número da task ($taskNumber) ao início dele"
+read title
+
+# backup do último pr
+mv $descTempFile $lastDescTempFile
+
+# cria arquivo tmp para descrição apenas com o número da task
+echo $taskNumber > $descTempFile
+
+# concatena o template ao final do arquivo tmp para descrição
+cat $templateFile >> $descTempFile
+
+# abre o arquivo temporário para edição
+$EDITOR $descTempFile
+
+# prepara o conteúdo do arquivo editado para ser transmitido via linha de comando
+set description
+while read -l line
+  set -a description "$line "
+end < $descTempFile
+
+
+az repos pr create --draft --title "#$taskNumber $title" -t $mainBranch -r $repoName -d $description > pr.log
+
