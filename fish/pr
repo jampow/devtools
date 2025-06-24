@@ -33,9 +33,9 @@ end < $descTempFile
 
 az repos pr create --draft --title "#$taskNumber $title" -t $mainBranch -r $repoName -d $description > $prLogTempFile
 
-set repoUrl (cat $prLogTempFile | jq .repository.remoteUrl)
+set repoUrl (cat $prLogTempFile | jq .repository.webUrl | sed "s/\"//g")
 set prId (cat $prLogTempFile | jq .codeReviewId)
-set prUrl $repoUrl/pullrequest/$prId
+set prUrl "$repoUrl/pullrequest/$prId"
 
 echo $prUrl
 
