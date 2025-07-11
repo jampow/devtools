@@ -6,11 +6,34 @@ set repoName (basename (cat $gitTopLevel/.git/config | grep "url = " | grep -o "
 set templateFile (echo $gitTopLevel/.azuredevops/pull_request_template.md);
 set descTempFile /tmp/description.md;
 set lastDescTempFile /tmp/lastDescription.md;
-set prLogTempFile /tmp/pr.log
-set taskNumber (echo (__git.current_branch) | grep -e "[0-9]\+" -o);
+set prLogTempFile /tmp/pr.log;
+set currentBranch (__git.current_branch);
+set taskNumber (echo "$currentBranch" | grep -e "[0-9]\+" -o);
+
+# Verifica se tem commits para enviar ao remoto
+if not git diff --cached --quiet origin/$currentBranch
+  echo "Você tem commits pendentes. Por favor, envie-os ao servidor antes de criar o PR."
+  exit 1
+end
+
+if test -z "$taskNumber"
+  echo "Não consegui identificar o número da task no nome do branch atual ($currentBranch)."
+  echo "Por favor, informe o número da task manualmente:"
+  read -P "" taskNumber
+  echo
+end
 
 echo "Qual o título do seu PR? Vamos adicionar o número da task ($taskNumber) ao início dele"
-read title
+read -l -P "" title
+
+if test -z "$title"
+  echo
+  echo "Título não pode ser vazio. Saindo do programa."
+  exit 1
+end
+
+echo ops
+exit 0
 
 # backup do último pr
 mv $descTempFile $lastDescTempFile
