@@ -1,8 +1,20 @@
 #!/bin/fish
 
+## trim function
+function trim
+    set -l var $argv
+    set var (string trim $var)
+    echo $var
+end
+
 set gitTopLevel (git rev-parse --show-toplevel);
+# echo "gitTopLevel: $gitTopLevel"
 set mainBranch (__git.default_branch);
-set repoName (basename (cat $gitTopLevel/.git/config | grep "url = " | grep -o "\/.\+"));
+# echo "mainBranch: $mainBranch"
+set configFile (trim (git config --list --show-origin | tail -n 1 | grep -o "\/[^[:space:]]\+[[:space:]]" | grep -o "^[^[:space:]]\+"));
+# echo configFile: "$configFile"
+set repoName (basename (cat $configFile | grep "url = " | grep -o "\/.\+"));
+# echo repoName: $repoName
 set templateFile (echo $gitTopLevel/.azuredevops/pull_request_template.md);
 set descTempFile /tmp/description.md;
 set lastDescTempFile /tmp/lastDescription.md;
@@ -10,8 +22,14 @@ set prLogTempFile /tmp/pr.log;
 set currentBranch (__git.current_branch);
 set taskNumber (echo "$currentBranch" | grep -e "[0-9]\+" -o);
 
+# Verifica se a branch existe no remoto
+if git show-ref --quiet refs/remotes/origin/$currentBranch
+  echo "A branch $currentBranch não existe no remoto. Por favor, crie-a antes de criar o PR."
+  git push -u origin $currentBranch
+end
+
 # Verifica se tem commits para enviar ao remoto
-if not git diff --cached --quiet origin/$currentBranch
+if not git diff --cached --quiet origin/$__git.current_branch
   echo "Você tem commits pendentes. Por favor, envie-os ao servidor antes de criar o PR."
   exit 1
 end
@@ -32,9 +50,6 @@ if test -z "$title"
   exit 1
 end
 
-echo ops
-exit 0
-
 # backup do último pr
 mv $descTempFile $lastDescTempFile
 
@@ -42,7 +57,9 @@ mv $descTempFile $lastDescTempFile
 echo \#$taskNumber > $descTempFile
 
 # concatena o template ao final do arquivo tmp para descrição
-cat $templateFile >> $descTempFile
+if test -f $templateFile
+  cat $templateFile >> $descTempFile
+end
 
 # abre o arquivo temporário para edição
 $EDITOR $descTempFile
@@ -53,8 +70,7 @@ while read -l line
   set -a description "$line "
 end < $descTempFile
 
-
-az repos pr create --draft --title "#$taskNumber $title" -t $mainBranch -r $repoName -d $description > $prLogTempFile
+az repos pr create --draft --title "#$taskNumber $title" -t $mainBranch -r $repoName -d $description > $prLogTempFile;
 
 set repoUrl (cat $prLogTempFile | jq .repository.webUrl | sed "s/\"//g")
 set prId (cat $prLogTempFile | jq .codeReviewId)

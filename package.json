@@ -1,12 +1,21 @@
 {
   "name": "devtools",
   "version": "1.0.0",
-  "description": "",
+  "description": "collection of tools for development",
   "main": "index.js",
+  "bin": {
+    "tdt": "./src/index.ts"
+  },
   "scripts": {
+    "build": "rolldown --config ./rolldown.config.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "author": "Gianpaulo M. Soares",
+  "license": "ISC",
+  "devDependencies": {
+    "rolldown": "1.0.0-beta.20"
+  }
 }
+
+
