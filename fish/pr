@@ -8,13 +8,9 @@ function trim
 end
 
 set gitTopLevel (git rev-parse --show-toplevel);
-# echo "gitTopLevel: $gitTopLevel"
 set mainBranch (__git.default_branch);
-# echo "mainBranch: $mainBranch"
 set configFile (trim (git config --list --show-origin | tail -n 1 | grep -o "\/[^[:space:]]\+[[:space:]]" | grep -o "^[^[:space:]]\+"));
-# echo configFile: "$configFile"
 set repoName (basename (cat $configFile | grep "url = " | grep -o "\/.\+"));
-# echo repoName: $repoName
 set templateFile (echo $gitTopLevel/.azuredevops/pull_request_template.md);
 set descTempFile /tmp/description.md;
 set lastDescTempFile /tmp/lastDescription.md;
