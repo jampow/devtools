@@ -18,6 +18,14 @@ set prLogTempFile /tmp/pr.log;
 set currentBranch (__git.current_branch);
 set taskNumber (echo "$currentBranch" | grep -e "[0-9]\+" -o);
 
+# verifica se a task number tem mais de uma sequencia de números
+if echo $taskNumber | grep -qE "[0-9]{2,}"; then
+  # Se tiver, separa os dois números
+  set subTaskNumber (echo $taskNumber | grep -oE "[0-9]{2,}" | tail -n 1)
+  set taskNumber (echo $taskNumber | grep -oE "[0-9]{2,}" | head -n 1)
+
+end
+
 # Verifica se a branch existe no remoto
 if git show-ref --quiet refs/remotes/origin/$currentBranch
   echo "A branch $currentBranch não existe no remoto. Por favor, crie-a antes de criar o PR."
@@ -37,7 +45,18 @@ if test -z "$taskNumber"
   echo
 end
 
-echo "Qual o título do seu PR? Vamos adicionar o número da task ($taskNumber) ao início dele"
+if test -z "$subTaskNumber"
+  echo "Não consegui identificar o número da sub task no nome do branch atual ($currentBranch)."
+  echo "Por favor, informe o número da sub task manualmente ou deixe o campo em branco, caso não tenha sub task:"
+  read -P "" subTaskNumber
+  echo
+end
+
+if not test -z "$subTaskNumber"
+  echo "Qual o título do seu PR? Vamos adicionar o número da task ($taskNumber) ao início dele"
+else
+  echo "Qual o título do seu PR? Vamos adicionar os números da task ($taskNumber) e da sub task ($subTaskNumber) ao início dele"
+end
 read -l -P "" title
 
 if test -z "$title"
@@ -51,6 +70,7 @@ mv $descTempFile $lastDescTempFile
 
 # cria arquivo tmp para descrição apenas com o número da task
 echo \#$taskNumber > $descTempFile
+echo \#$subTaskNumber >> $descTempFile
 
 # concatena o template ao final do arquivo tmp para descrição
 if test -f $templateFile
