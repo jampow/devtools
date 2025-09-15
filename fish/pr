@@ -51,10 +51,12 @@ if test -z "$subTaskNumber"
   echo
 end
 
-if not test -z "$subTaskNumber"
+set titlePrefix "#$taskNumber"
+if test -z "$subTaskNumber"
   echo "Qual o título do seu PR? Vamos adicionar o número da task ($taskNumber) ao início dele"
 else
   echo "Qual o título do seu PR? Vamos adicionar os números da task ($taskNumber) e da sub task ($subTaskNumber) ao início dele"
+  set -a titlePrefix "#$subTaskNumber"
 end
 read -l -P "" title
 
@@ -85,12 +87,12 @@ while read -l line
   set -a description "$line "
 end < $descTempFile
 
-az repos pr create --draft --title "#$taskNumber $title" -t $mainBranch -r $repoName -d $description > $prLogTempFile;
+BROWSER=google-chrome-stable az repos pr create --draft --title "$titlePrefix $title" -t $mainBranch -r $repoName -d $description --open > $prLogTempFile;
 
-set repoUrl (cat $prLogTempFile | jq .repository.webUrl | sed "s/\"//g")
-set prId (cat $prLogTempFile | jq .codeReviewId)
-set prUrl "$repoUrl/pullrequest/$prId"
+# set repoUrl (cat $prLogTempFile | jq .repository.webUrl | sed "s/\"//g")
+# set prId (cat $prLogTempFile | jq .codeReviewId)
+# set prUrl "$repoUrl/pullrequest/$prId"
 
-echo $prUrl
+# echo $prUrl
 
-google-chrome-stable $prUrl
+# google-chrome-stable $prUrl
